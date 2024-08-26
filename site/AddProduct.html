@@ -1,0 +1,95 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        div {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: inline-block;
+            width: 100px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 200px;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+        .container {
+            width: 50%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br><br>
+        </div>
+        <div>
+            <label for="price">Price:</label>
+            <input type="number" id="price" name="price" step="0.01" required><br><br>
+        </div>
+        <div>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" required></textarea><br><br>
+        </div>
+        <div>
+            <button onclick="add()">Add Product</button>
+        </div>
+    </div>
+</body>
+<script>
+    function add() {
+        const name = document.getElementById('name').value;
+        const price = document.getElementById('price').value;
+        const description = document.getElementById('description').value;
+        const priceNumber = parseFloat(price);
+        if (isNaN(priceNumber)) {
+            alert('Please enter a valid price');
+            return;
+        }
+
+        if (description.trim() === '') {
+            alert('Please enter a description');
+            return;
+        }
+
+        const product = {
+            id: 1,
+            name: name,
+            price: priceNumber,
+            description: description
+        };
+
+        //post the product to the server. server url: http://localhost:3000/api/products
+
+        fetch('http://localhost:3000/api/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(product)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Product added successfully');
+        })
+    }
+</script>
