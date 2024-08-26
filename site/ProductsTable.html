@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+        button{
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Description</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+    </table>
+</body>
+<script>
+    
+    fetch('http://localhost:3000/api/products')
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        let table = document.querySelector('table');
+        data.forEach(product => {
+            let row = document.createElement('tr');
+            let id = document.createElement('td');
+            let name = document.createElement('td');
+            let price = document.createElement('td');
+            let description = document.createElement('td');
+            let deleteButton = document.createElement('button');
+
+            id.textContent = product.id;
+            name.textContent = product.name;
+            price.textContent = product.price;
+            description.textContent = product.description;
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = () => {
+                deleteButton.onclick = () => {
+                    if (confirm("Are you sure you want to delete this product?")) {
+                        fetch(`http://localhost:3000/api/products/${product.id}`, {
+                            method: 'DELETE'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data);
+                            row.remove();
+                        });
+                    }
+                }
+            }
+
+            row.appendChild(id);
+            row.appendChild(name);
+            row.appendChild(price);
+            row.appendChild(description);
+            row.appendChild(deleteButton);
+
+            table.appendChild(row);
+        });
+    });
+
+</script>
+</html>

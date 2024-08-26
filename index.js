@@ -4,7 +4,8 @@ const { products } = require('./data/products');
 const { connect } = require('./db/connect');
 const { userRouter } = require('./routes/userRoutes');
 const jwt = require('jsonwebtoken');
-
+const { User } = require('./models/User');
+const port = 3000;
 
 connect();
 
@@ -18,6 +19,12 @@ const tokenKey = 'secret';
 
 //jwt middleware with Bearer schema
 const jwtMiddleware = (req, res, next) => {
+
+    //api/login endpointi için token kontrolü yapılmamalı
+    if (req.path === '/api/login') {
+        return next();
+    }
+
     try {
         const authHeader = req.headers.authorization;
         if (authHeader) {
@@ -37,14 +44,24 @@ const jwtMiddleware = (req, res, next) => {
     }
 }
 
-app.use(jwtMiddleware);
+// app.use(jwtMiddleware);
 
 
 
 app.use('/api/users', userRouter);
 
-const port = 3000;
 
+//token vermesi için login endpointi oluşturuldu
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    const user = await User.findOne({ username, password });
+    if (user) {
+        const token = jwt.sign({ username }, tokenKey);
+        return res.json({ token });
+    }
+    return res.sendStatus(401);
+});
 
 
 app.get('/api/products', (req, res) => {
@@ -116,13 +133,6 @@ app.delete('/api/products/:id', (req, res) => {
     return res.status(404).json({ message: 'Product not found' });
 }
 )
-
-
-
-
-
-
-
 
 
 
