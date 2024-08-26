@@ -1,16 +1,51 @@
 const express = require('express');
 const cors = require('cors');
 const { products } = require('./data/products');
-const { User } = require('./models/User');
 const { connect } = require('./db/connect');
+const { userRouter } = require('./routes/userRoutes');
+const jwt = require('jsonwebtoken');
+
 
 connect();
 
 
 const app = express();
+app.use(express.json());
+app.use(cors());
+
+
+const tokenKey = 'secret';
+
+//jwt middleware with Bearer schema
+const jwtMiddleware = (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            jwt.verify(token, tokenKey, (err, user) => {
+                if (err) {
+                    return res.sendStatus(403);
+                }
+                req.user = user;
+                next();
+            });
+        } else {
+            return res.sendStatus(401);
+        }
+    } catch (error) {
+       return res.sendStatus(500);
+    }
+}
+
+app.use(jwtMiddleware);
+
+
+
+app.use('/api/users', userRouter);
+
 const port = 3000;
 
-app.use(express.json());
+
 
 app.get('/api/products', (req, res) => {
    return res.json(products);
@@ -84,78 +119,13 @@ app.delete('/api/products/:id', (req, res) => {
 
 
 
-// User routes with try catch - GET, POST, PUT, DELETE
-app.get('/api/users', async (req, res) => {
-    try {
-        const users = await User.find({});
-        return res.json(users);
-    } catch (error) {
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-});
-app.post('/api/users', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: 'Invalid email address' });
-        }
-
-        // Password policy
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
-        if (!passwordRegex.test(password)) {
-            return res.status(400).json({ message: 'Password must contain at least 8 characters, including at least one uppercase letter, one lowercase letter, and one digit' });
-        }
-
-        const user = new User({ email, password });
-        await user.save();
-        return res.json(user);
-    } catch (error) {
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-app.put('/api/users/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        const { email, password } = req.body;
-        const user = await User.findById(id);
-        if (user) {
-            user.email = email;
-            user.password = password;
-            await user.save();
-            return res.json(user);
-        }
-        return res.status(404).json({ message: 'User not found' });
-    } catch (error) {
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-}
-)
-
-app.delete('/api/users/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        const user = await User.findById(id);
-        if (user) {
-            await user.remove();
-            return res.json({ message: 'User deleted' });
-        }
-        return res.status(404).json({ message: 'User not found' });
-    } catch (error) {
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-}
-)
 
 
 
 
 
 
-app.use(cors());
+
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
