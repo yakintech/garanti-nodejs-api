@@ -5,6 +5,10 @@ const { connect } = require('./db/connect');
 const { userRouter } = require('./routes/userRoutes');
 const jwt = require('jsonwebtoken');
 const { User } = require('./models/User');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path')
+
 const port = 3000;
 
 connect();
@@ -63,9 +67,52 @@ app.post('/api/login', async (req, res) => {
     return res.sendStatus(401);
 });
 
+const imagesDir = path.join(__dirname, 'images');
+if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir);
+}
 
-app.get('/api/products', (req, res) => {
-   return res.json(products);
+// Multer configuration
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, imagesDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/api/products', upload.single('image'), (req, res) => {
+    try {
+        const { name, price, description } = req.body;
+
+        if (!name || !price) {
+            return res.status(400).json({ message: 'Name and price are required' });
+        }
+
+        if (typeof price !== 'number') {
+            return res.status(400).json({ message: 'Price must be a number' });
+        }
+
+        if (name.length < 3) {
+            return res.status(400).json({ message: 'Name must be at least 3 characters' });
+        }
+
+        const product = {
+            name,
+            price,
+            description,
+            image: req.file.filename // Save the filename of the uploaded image
+        };
+
+        product.id = products.length + 1;
+        products.push(product);
+        return res.json(product);
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
 app.get('/api/products/:id', (req, res) => {

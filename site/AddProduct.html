@@ -51,6 +51,10 @@
             <textarea id="description" name="description" required></textarea><br><br>
         </div>
         <div>
+            <label for="image">Image:</label>
+            <input type="file" id="image" name="image" accept="image/*">
+        </div>
+        <div>
             <button onclick="add()">Add Product</button>
         </div>
     </div>
@@ -60,7 +64,9 @@
         const name = document.getElementById('name').value;
         const price = document.getElementById('price').value;
         const description = document.getElementById('description').value;
+        const image = document.getElementById('image').files[0];
         const priceNumber = parseFloat(price);
+
         if (isNaN(priceNumber)) {
             alert('Please enter a valid price');
             return;
@@ -71,25 +77,25 @@
             return;
         }
 
-        const product = {
-            id: 1,
-            name: name,
-            price: priceNumber,
-            description: description
-        };
-
-        //post the product to the server. server url: http://localhost:3000/api/products
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('price', priceNumber);
+        formData.append('description', description);
+        if (image) {
+            formData.append('image', image);
+        }
 
         fetch('http://localhost:3000/api/products', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(product)
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
             alert('Product added successfully');
         })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add product');
+        });
     }
 </script>
