@@ -1,0 +1,2 @@
+1) Proje indikten sonra npm install
+2) Başlatmak için node index
