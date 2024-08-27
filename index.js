@@ -7,7 +7,8 @@ const jwt = require('jsonwebtoken');
 const { User } = require('./models/User');
 const multer = require('multer');
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
+const { deviceRouter } = require('./routes/deviceRoutes');
 
 const port = 3000;
 
@@ -53,6 +54,7 @@ const jwtMiddleware = (req, res, next) => {
 
 
 app.use('/api/users', userRouter);
+app.use('/api/devices', deviceRouter);
 
 
 //token vermesi için login endpointi oluşturuldu
